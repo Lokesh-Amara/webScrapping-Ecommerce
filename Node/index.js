@@ -19,6 +19,8 @@ const port = 3210;
 app.use(cors());
 app.use(Express.json());
 
+// This methos is to get all the data from the DB
+
 app.get("/", async (req, res) => {
   console.log("Request came to get method");
 
@@ -30,7 +32,7 @@ app.get("/", async (req, res) => {
   }
 });
 
-
+// This method is for inserting data in DB
 app.post("/", async (req, res) => {
   console.log("request came to Post method ");
   const techData = new webData({
@@ -50,11 +52,13 @@ app.post("/", async (req, res) => {
   }
 })
 
+//This method is for search suggestions
+
 app.post("/search",async(req, res) => {
   console.log("request came to Search method ");
   const key = String(req.body.searchkey);
   try {
-    const resp = await webData.find({tag : { $regex: key, $options: 'i' }}, {title : 1, _id : 0}) ;
+    const resp = await webData.find({title : { $regex: key, $options: 'i' }}, {title : 1, _id : 0}).limit(10) ;
     var result = [];
     for(const v of resp){
       result.push(v.title)
@@ -64,6 +68,8 @@ app.post("/search",async(req, res) => {
     console.log(err)
   }
 })
+
+//This method is to initialize DB when the application loads
 
 app.get("/onload", async(req, res) => {
   
@@ -76,7 +82,17 @@ app.get("/onload", async(req, res) => {
 
 })
 
+// This methos is to get data based on title
 
+app.post("/title", async(req, res) => {
+  console.log("searching based on title");
+  try {
+    const resp = await webData.find({title : req.body.title}) ;
+    res.send(resp);
+  }catch (err) {
+    console.log(err);
+  }
+})
 
 
 

@@ -37,12 +37,11 @@ function Searchbox(props) {
       style={{display : "inline-block", width : "90%", }} 
       onChange={ () => {
         var x = document.getElementById("inputbox").value;
-        if(x.length > 2){
-          //const data = {searchkey : x};
+        if(x.length > 0){
           const resArr =  [];
-          api.post("/search",  {searchkey : x}).then( 
-//           (resp) => props.setSearchsuggestions(resp)
-            ) ;
+          api.post("/search",  {searchkey : x}).then(  (resp) => props.setSearchsuggestions(resp.data)  ) ;
+        }else {
+          props.setSearchsuggestions([]);
         }
       }}
       ></input>
@@ -56,10 +55,12 @@ function Searchbox(props) {
         padding : "2px"
       }}
       onClick= {() => { 
-        console.log("Search clicked")
-        api.get("/").then( (resp) => props.setWebdata(resp.data))}}  
+        console.log("Search clicked");
+        const reqTitle = document.getElementById("inputbox").value;
+        api.post("/title", {title : reqTitle}).then( (resp) => props.setDataToDisplay(resp.data[0]));
+        setTimeout(() => api.get("/").then( (resp) => props.setWebdata(resp.data)), 5000)}}  
       ><i className="fas fa-search"></i> search</button>
-      {props.searchList}
+       {props.searchList}
     </div>
   )
 }
@@ -105,23 +106,29 @@ function DisplayProduct(props) {
           </div>          
         </div>
       </div>
-      <hr/>
+      <hr style={{backgroundColor : "grey", height: "2px", width: "90%", marginLeft : "0px"}}/>
     </div>
   )
 }
+
+
 
 function SearchInput(props) {
   return (
     <div>
       <input type="text" 
-      id=""
-      className="srchbox form-control" 
-      style={{display : "inline-block", width : "90%", }}
-      value={props.value}
-      onClick={ (value) => { 
-        document.getElementById("inputbox").value = value ; 
-      }}
-      >{props.value}</input>
+        key={props.id}
+        className="srchbox form-control" 
+        style={{display : "inline-block", width : "90%", }}
+        value={props.value}
+        readOnly="readonly"
+        onClick={ () => { 
+             document.getElementById("inputbox").value = props.value ;
+             props.setSearchsuggestions([]);
+        }}
+        >
+      </input>
+    
     </div>
   )
 }
@@ -129,18 +136,19 @@ function SearchInput(props) {
 export default function App() {
   
   
-  useEffect(
-    () => api.get("/onload").then((response) => {
-      console.log("Getting response as  :", response.data);
-    }),
-    []
-  );
+  // useEffect(
+  //   () => api.get("/onload").then((response) => {
+  //     console.log("Getting response as  :", response.data);
+  //   }),
+  //   []
+  // );
 
   const [webdata, setWebdata] = useState([]);
 
   const [ currentPage, setCurrentPage] = useState(1);
   const [displaysPerPage] = useState(3);
 
+  const [dataToDisplay, setDataToDisplay] = useState({});
   var webList = [];
 
   const indexOfLastDisplay = currentPage * displaysPerPage ;
@@ -148,10 +156,10 @@ export default function App() {
   const currentDisplays = webdata.slice(indexOfFirstDisplay, indexOfLastDisplay);
   
   if(webdata.length !== 0) {
-    let id = 0 ;
+    webList.push(<p style={{fontSize : "24px"}}> <b>Related products</b></p>);
+    var id = 0 ;
         for(const v of currentDisplays){
-        console.log(v);
-        webList.push(<DisplayProduct title={v.title} image={v.image} price={v.price} fPrice={v.fPrice} rating={v.rating} id={id} />) ;
+        webList.push(<DisplayProduct title={v.title} image={v.image} price={v.price} fPrice={v.fPrice} rating={v.rating} key={id} />) ;
         id++ ;
         }
   }
@@ -162,11 +170,11 @@ export default function App() {
   var searchList = [];
 
   if(searchSuggestions.length !== 0) {
-    let id = 0 ;
+    let sid = 1 ;
         for(const v of searchSuggestions){
-        console.log(v);
-        searchList.push(<SearchInput  value={v}/>) ;
-        id++ ;
+       // console.log(v);
+        searchList.push(<SearchInput  value={v} setSearchsuggestions={setSearchsuggestions} key={v}/>) ;
+        sid++ ;
         }
   }
 
@@ -176,7 +184,16 @@ export default function App() {
         <div style={{height : "51px"}}></div>
         <div style={{backgroundColor: "#F0F2F5", height : "100%"}}>
           <div className="container" style={{backgroundColor:"#FFFFFF", height : "100%"}}>
-            <Searchbox setWebdata={setWebdata} webdata={webdata} searchList={searchList} setSearchsuggestions={setSearchsuggestions}></Searchbox>
+            <Searchbox 
+            setWebdata={setWebdata} 
+            webdata={webdata} 
+            searchList={searchList} 
+            setSearchsuggestions={setSearchsuggestions}
+            setDataToDisplay={setDataToDisplay} 
+            ></Searchbox>
+            {Object.keys(dataToDisplay).length !== 0  &&  
+              <DisplayProduct title={dataToDisplay.title} image={dataToDisplay.image} price={dataToDisplay.price} fPrice={dataToDisplay.fPrice} rating={dataToDisplay.rating} />
+            }
             {webList}
             <Pagination displaysPerPage={displaysPerPage} totalPosts={webdata.length} paginate={paginate}></Pagination>
           </div>
