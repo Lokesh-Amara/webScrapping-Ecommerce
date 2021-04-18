@@ -58,7 +58,7 @@ function Searchbox(props) {
         console.log("Search clicked");
         const reqTitle = document.getElementById("inputbox").value;
         api.post("/title", {title : reqTitle}).then( (resp) => props.setDataToDisplay(resp.data[0]));
-        setTimeout(() => api.get("/").then( (resp) => props.setWebdata(resp.data)), 5000)}}  
+         api.get("/").then( (resp) => props.setWebdata(resp.data))}}  
       ><i className="fas fa-search"></i> search</button>
        {props.searchList}
     </div>
@@ -156,7 +156,7 @@ export default function App() {
   const currentDisplays = webdata.slice(indexOfFirstDisplay, indexOfLastDisplay);
   
   if(webdata.length !== 0) {
-    webList.push(<p style={{fontSize : "24px"}}> <b>Related products</b></p>);
+    webList.push(<p style={{fontSize : "24px"}} key="dsa"> <b>Related products</b></p>);
     var id = 0 ;
         for(const v of currentDisplays){
         webList.push(<DisplayProduct title={v.title} image={v.image} price={v.price} fPrice={v.fPrice} rating={v.rating} key={id} />) ;
@@ -173,7 +173,7 @@ export default function App() {
     let sid = 1 ;
         for(const v of searchSuggestions){
        // console.log(v);
-        searchList.push(<SearchInput  value={v} setSearchsuggestions={setSearchsuggestions} key={v}/>) ;
+        searchList.push(<SearchInput  value={v} setSearchsuggestions={setSearchsuggestions} key={sid}/>) ;
         sid++ ;
         }
   }
